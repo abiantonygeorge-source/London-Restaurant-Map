@@ -171,13 +171,14 @@
   /* ---------- map ---------- */
   function ensureMap(){
     if (map || !window.L) return;
-    map = L.map('map', { zoomControl: true, attributionControl: true }).setView([51.508, -0.142], window.innerWidth < 600 ? 13 : 14);
+    map = L.map('map', { zoomControl: true, attributionControl: true, maxZoom: 16 }).setView([51.508, -0.142], window.innerWidth < 600 ? 13 : 14);
     const syncLabels = () => document.getElementById('map').classList.toggle('far', map.getZoom() < 15);
     map.on('zoomend', syncLabels); syncLabels();
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19, subdomains: 'abcd',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+    L.tileLayer(ESRI + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16, attribution: 'Tiles &copy; <a href="https://www.esri.com">Esri</a> — Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community'
     }).addTo(map);
+    L.tileLayer(ESRI + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16 }).addTo(map);
     layer = L.layerGroup().addTo(map);
     map.on('click', () => { sel = null; drawPins(); });
   }
