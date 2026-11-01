@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Black Book – Abi's London restaurants</title>
+<meta name="description" content="Abi's London restaurant picks, and exactly what to order at each.">
+<meta property="og:title" content="The Black Book – Abi's London restaurants">
+<meta property="og:description" content="London restaurant picks, and exactly what to order at each.">
+<meta name="theme-color" content="#121212">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+  :root{--bg:#121212;--panel:#1C1C1C;--line:#2C2C2C;--line2:#3A3A3A;--ink:#F2EFE8;--mute:#A8A39A;--gold:#E8C468;--goldbg:#3B321A}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px;margin:0 auto;padding:28px 20px 60px}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  h1{margin:6px 0 4px;font-family:'Instrument Serif',serif;font-weight:400;font-size:46px;line-height:1}
+  .sub{font-size:13px;color:var(--mute)}
+  .tabs{display:flex;background:var(--panel);border-radius:22px;padding:4px;gap:4px;margin:20px 0 14px}
+  .tabs a{flex:1;height:40px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:var(--ink);text-decoration:none}
+  .tabs a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;height:36px;padding:0 15px;border-radius:18px;font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap;background:transparent;color:var(--ink);border:1px solid var(--line2)}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .bar{display:flex;gap:8px;align-items:center;margin:8px 0 4px;flex-wrap:wrap}
+  select,input[type=search]{background:var(--panel);color:var(--ink);border:1px solid var(--line2);font:13px Inter,sans-serif;outline:none;height:36px;border-radius:18px}
+  select{padding:0 12px}
+  input[type=search]{flex:1;min-width:150px;padding:0 14px;font-size:14px}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .list{margin-top:10px}
+  .row{border-top:1px solid var(--line)}
+  .rowbtn{display:flex;gap:16px;padding:18px 4px;cursor:pointer;width:100%;background:none;border:0;color:inherit;text-align:left;font:inherit}
+  .n{font-family:'Instrument Serif',serif;font-size:28px;color:var(--gold);width:34px;line-height:1;flex:none}
+  .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .name{font-size:17px;font-weight:600}
+  .score{font-size:12px;font-weight:600;color:var(--bg);background:var(--gold);border-radius:10px;padding:3px 8px;flex:none}
+  .meta{font-size:12px;color:var(--mute)}
+  .dish{font-family:'Instrument Serif',serif;font-style:italic;font-size:20px;margin-top:4px;line-height:1.2}
+  .more{display:none;margin:0 4px 18px 54px;padding:14px;background:var(--panel);border-radius:14px;font-size:14px;line-height:1.5;gap:10px;flex-direction:column}
+  .row.open .more{display:flex}
+  .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:12px;padding:4px 9px;border-radius:10px;background:var(--goldbg);color:var(--gold)}
+  .more a{color:var(--gold)}
+  .it{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+  .it .t{font-size:11px;color:var(--mute);margin-left:6px}
+  .it b{color:var(--gold)}
+  .status{color:var(--mute);font-size:14px;padding:30px 0;text-align:center}
+  #map{margin-top:10px;border-radius:20px;overflow:hidden;border:1px solid var(--line);height:min(70vh,560px);background:#1A1B1D}
+  .leaflet-container{font-family:Inter,sans-serif}
+  .pin{display:flex;align-items:center;gap:6px;white-space:nowrap;pointer-events:auto}
+  .pin i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#121212;border:2px solid #121212;display:flex;align-items:center;justify-content:center;font:700 13px Inter,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+  .pin span{font:600 12px Inter,sans-serif;color:var(--ink);text-shadow:0 0 3px #000,0 0 3px #000}
+  .pin.on i{background:var(--gold)}
+  #map.far .pin span{display:none}
+  #map.far .pin.on span{display:inline}
+  .leaflet-bar a{background:var(--panel)!important;color:var(--ink)!important;border-color:var(--line2)!important}
+  .leaflet-control-attribution{background:rgba(18,18,18,.75)!important;color:var(--mute)!important}
+  .leaflet-control-attribution a{color:var(--mute)!important}
+  .sheet{margin-top:12px;background:var(--panel);border-radius:18px;padding:16px 18px;display:none;flex-direction:column;gap:6px}
+  .sheet.on{display:flex}
+  .sheet a{color:var(--gold);font-size:14px}
+  footer{margin-top:40px;font-size:12px;color:var(--mute);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Abi's London</div>
+  <h1>The Black Book</h1>
+  <div class="sub" id="sub">Loading…</div>
+
+  <nav class="tabs" aria-label="View">
+    <a href="#list" id="tab-list">List</a>
+    <a href="#map" id="tab-map">Map</a>
+  </nav>
+
+  <div class="chips" id="chips" role="group" aria-label="Filter by occasion"></div>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Search a place, dish or area" aria-label="Search">
+    <select id="area" aria-label="Area"></select>
+    <select id="price" aria-label="Price">
+      <option value="">Any price</option><option value="1">£</option><option value="2">££</option><option value="3">£££</option><option value="4">££££</option>
+    </select>
+    <select id="sort" aria-label="Sort">
+      <option value="score">Top rated</option><option value="new">Recently added</option><option value="az">A–Z</option>
+    </select>
+  </div>
+
+  <section id="view-list"><div class="list" id="list"></div></section>
+  <section id="view-map" hidden>
+    <div id="map" role="region" aria-label="Map of restaurants"></div>
+    <div class="sheet" id="sheet" aria-live="polite"></div>
+  </section>
+
+  <footer id="foot">Price per head: £ under £25 · ££ £25–50 · £££ £50–80 · ££££ £80+.</footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pounds = n => '£'.repeat(Math.max(1, Math.min(4, Number(n) || 1)));
+  let all = [], occ = 'All', openId = null, sel = null, map = null, layer = null, fitted = false;
+
+  fetch('data.json', { cache: 'no-cache' }).then(r => r.json()).then(d => {
+    all = (d.restaurants || []).filter(r => r && r.name);
+    if (d.updated) $('#foot').insertAdjacentHTML('afterbegin', `Last updated ${esc(new Date(d.updated).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}))}. `);
+    buildFilters(); route();
+  }).catch(() => { $('#sub').textContent = 'Couldn’t load the list. Try refreshing.'; });
+
+  function buildFilters(){
+    const occs = ['All', ...new Set(all.flatMap(r => r.occasions || []))];
+    $('#chips').innerHTML = occs.map(o => `<button type="button" class="chip" aria-pressed="${o===occ}" data-o="${esc(o)}">${esc(o)}</button>`).join('');
+    const cur = $('#area').value;
+    const areas = [...new Set(all.map(r => r.area).filter(Boolean))].sort();
+    $('#area').innerHTML = '<option value="">All areas</option>' + areas.map(a => `<option ${a===cur?'selected':''}>${esc(a)}</option>`).join('');
+  }
+  $('#chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; occ = b.dataset.o; buildFilters(); render(); });
+  ['#q','#area','#price','#sort'].forEach(s => $(s).addEventListener('input', render));
+
+  function filtered(){
+    const q = $('#q').value.trim().toLowerCase(), a = $('#area').value, p = $('#price').value, s = $('#sort').value;
+    const xs = all.filter(r =>
+      (occ === 'All' || (r.occasions || []).includes(occ)) && (!a || r.area === a) && (!p || String(r.price) === p) &&
+      (!q || [r.name, r.area, r.cuisine, r.bestDish, r.alsoGet, r.tip, ...(r.items||[]).map(x=>x.name)].join(' ').toLowerCase().includes(q)));
+    xs.sort(s === 'az' ? (x,y) => x.name.localeCompare(y.name)
+          : s === 'new' ? (x,y) => String(y.addedAt||'').localeCompare(String(x.addedAt||''))
+          : (x,y) => (Number(y.rating)||0) - (Number(x.rating)||0) || x.name.localeCompare(y.name));
+    return xs;
+  }
+  const ranked = r => (r.items||[]).slice().sort((a,b)=>(Number(b.score)||0)-(Number(a.score)||0));
+  const mapsUrl = r => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([r.name, r.address || r.area, 'London'].filter(Boolean).join(' '));
+  const metaLine = r => [r.area, r.cuisine, r.price ? pounds(r.price) : ''].filter(Boolean).map(esc).join(' · ');
+
+  function render(){
+    const xs = filtered();
+    $('#sub').textContent = `${all.length} place${all.length===1?'':'s'} · what to order at each`;
+    $('#list').innerHTML = !xs.length ? '<div class="status">No places match these filters.</div>' : xs.map((r,i) => `
+      <div class="row ${r.id===openId?'open':''}" id="place-${esc(r.id)}">
+        <button type="button" class="rowbtn" data-id="${esc(r.id)}" aria-expanded="${r.id===openId}">
+          <div class="n">${String(i+1).padStart(2,'0')}</div>
+          <div class="body">
+            <div class="top"><div class="name">${esc(r.name)}</div>${r.rating!=null?`<div class="score">${esc(r.rating)}/10</div>`:''}</div>
+            <div class="meta">${metaLine(r)}</div>
+            <div class="dish">Get the ${esc(r.bestDish || '…')}</div>
+          </div>
+        </button>
+        <div class="more">
+          ${ranked(r).length ? `<div><span class="k">What we ordered, ranked</span>${ranked(r).map((x,j) => `<div class="it"><span><span style="color:var(--mute);margin-right:8px">${j+1}.</span>${esc(x.name)}${x.type?`<span class="t">${esc(x.type)}</span>`:''}</span>${x.score!=null?`<b>${esc(x.score)}/10</b>`:''}</div>`).join('')}</div>` : ''}
+          ${r.tip?`<div><span class="k">Tip</span><br>${esc(r.tip)}</div>`:''}
+          ${(r.occasions||[]).length?`<div class="tags">${r.occasions.map(o=>`<span class="tag">${esc(o)}</span>`).join('')}</div>`:''}
+          ${r.address?`<div class="meta">${esc(r.address)}</div>`:''}
+          <div><a href="${esc(mapsUrl(r))}" target="_blank" rel="noopener">Open in Google Maps</a></div>
+        </div>
+      </div>`).join('');
+    drawPins();
+  }
+  $('#list').addEventListener('click', e => {
+    const b = e.target.closest('.rowbtn'); if (!b) return;
+    openId = openId === b.dataset.id ? null : b.dataset.id;
+    document.querySelectorAll('.row').forEach(x => { const on = x.id === 'place-' + openId; x.classList.toggle('open', on); x.querySelector('.rowbtn').setAttribute('aria-expanded', on); });
+    if (openId) history.replaceState(null, '', '#place-' + openId);
+  });
+
+  /* ---------- map ---------- */
+  function ensureMap(){
+    if (map || !window.L) return;
+    map = L.map('map', { zoomControl: true, attributionControl: true }).setView([51.508, -0.142], window.innerWidth < 600 ? 13 : 14);
+    const syncLabels = () => document.getElementById('map').classList.toggle('far', map.getZoom() < 15);
+    map.on('zoomend', syncLabels); syncLabels();
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19, subdomains: 'abcd',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(map);
+    layer = L.layerGroup().addTo(map);
+    map.on('click', () => { sel = null; drawPins(); });
+  }
+  function drawPins(){
+    if (!map) return;
+    layer.clearLayers();
+    const xs = filtered().filter(r => isFinite(r.lat) && isFinite(r.lng) && r.lat !== null);
+    xs.forEach((r, i) => {
+      const icon = L.divIcon({ className: '', iconSize: null, iconAnchor: [14, 14],
+        html: `<div class="pin ${sel===r.id?'on':''}"><i>${i+1}</i><span>${esc(r.name)}</span></div>` });
+      L.marker([r.lat, r.lng], { icon, title: r.name, riseOnHover: true }).addTo(layer)
+        .on('click', ev => { L.DomEvent.stopPropagation(ev); sel = r.id; drawPins(); });
+    });
+    const s = all.find(x => x.id === sel);
+    $('#sheet').classList.toggle('on', !!s);
+    $('#sheet').innerHTML = s ? `<div class="top"><div class="name">${esc(s.name)}</div>${s.rating!=null?`<div class="score">${esc(s.rating)}/10</div>`:''}</div>
+      <div class="meta">${metaLine(s)}</div>
+      <div class="dish">Get the ${esc(s.bestDish||'…')}</div>${s.alsoGet?`<div class="meta">Also: ${esc(s.alsoGet)}</div>`:''}
+      ${s.tip?`<div class="meta">${esc(s.tip)}</div>`:''}
+      <a href="${esc(mapsUrl(s))}" target="_blank" rel="noopener">Directions in Google Maps</a>` : '';
+  }
+
+  /* ---------- routing ---------- */
+  function route(){
+    const h = location.hash.slice(1), isMap = h === 'map';
+    $('#view-list').hidden = isMap; $('#view-map').hidden = !isMap;
+    $('#tab-list').removeAttribute('aria-current'); $('#tab-map').removeAttribute('aria-current');
+    (isMap ? $('#tab-map') : $('#tab-list')).setAttribute('aria-current', 'page');
+    if (h.startsWith('place-')) openId = h.slice(6);
+    render();
+    if (isMap) { ensureMap(); setTimeout(() => { map && map.invalidateSize(); drawPins(); }, 0); }
+    if (h.startsWith('place-')) { const el = document.getElementById(h); if (el) el.scrollIntoView({ block: 'center' }); }
+  }
+  window.addEventListener('hashchange', route);
+})();
+</script>
+</body>
+</html>
